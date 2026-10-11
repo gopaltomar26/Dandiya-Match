@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dandiya Night — Find Your Match</title>
+<style>
+:root{--bg:#1b0f2e;--panel:#2a1a45;--panel2:#341f57;--ink:#fdf6ff;--mute:#c9b6e0;--line:#4a3270;--accent:#ff7a3d;--accent2:#ffb703;--err:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#3a1f5e,var(--bg));color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif}
+button,input,select{font:inherit}
+.hidden{display:none!important}
+.wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{background:var(--panel);border:1px solid var(--line);padding:28px;width:100%;max-width:420px;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+h1{margin:0 0 4px;font-size:24px;letter-spacing:-.02em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:0 0 20px;color:var(--mute);font-size:14px}
+label{display:block;font-weight:600;margin:14px 0 6px;font-size:13px}
+input[type=text],input[type=tel],input[type=number],select{width:100%;padding:11px 12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.photo-row{display:flex;align-items:center;gap:14px;margin-top:8px}
+.photo-preview{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--bg);border:1px solid var(--line)}
+.file-btn{border:1px dashed var(--line);background:var(--bg);color:var(--mute);padding:10px 14px;border-radius:8px;cursor:pointer;flex:1;text-align:center}
+.btn{margin-top:22px;width:100%;padding:12px;border:0;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#241104;font-weight:700;cursor:pointer}
+.btn:disabled{opacity:.55;cursor:wait}
+.btn-ghost{margin-top:10px;background:none;border:1px solid var(--line);color:var(--ink)}
+.err{color:var(--err);min-height:20px;margin:10px 0 0;font-size:13px}
+.otp-row{display:flex;gap:8px}
+.otp-row input{text-align:center;letter-spacing:4px;font-size:20px}
+.resend{text-align:center;margin-top:14px;font-size:13px;color:var(--mute)}
+.resend button{background:none;border:0;color:var(--accent2);cursor:pointer;padding:0;font:inherit;text-decoration:underline}
+/* profiles page */
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h2{margin:0;font-size:18px}
+.link{background:none;border:1px solid var(--line);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer}
+main.match{max-width:960px;margin:0 auto;padding:20px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;background:var(--panel);padding:14px;border-radius:10px;margin-bottom:18px;align-items:end}
+.filters .f{display:flex;flex-direction:column;gap:4px}
+.filters label{margin:0;font-size:12px;color:var(--mute)}
+.filters input,.filters select{padding:8px 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.pcard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:center}
+.pcard img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.pcard .pinfo{padding:10px}
+.pcard b{display:block;font-size:15px}
+.pcard small{color:var(--mute)}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:30px}
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: Registration -->
+<section id="page-register" class="wrap">
+  <form class="card" id="registerForm">
+    <h1>Dandiya Night 🪔</h1>
+    <p class="sub">Tell us about yourself to join the matching list.</p>
+
+    <label for="name">Full name</label>
+    <input id="name" type="text" required maxlength="60" autocomplete="name">
+
+    <label for="age">Age</label>
+    <input id="age" type="number" min="18" max="100" required>
+
+    <label for="gender">Gender</label>
+    <select id="gender" required>
+      <option value="" disabled selected>Select</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label for="phone">Phone number</label>
+    <input id="phone" type="tel" required placeholder="10-digit number" autocomplete="tel">
+
+    <label>Photo</label>
+    <div class="photo-row">
+      <img id="photoPreview" class="photo-preview" alt="">
+      <label class="file-btn" for="photo">Choose photo</label>
+      <input id="photo" type="file" accept="image/*" capture="environment" class="hidden" required>
+    </div>
+
+    <p class="err" id="regErr" role="alert"></p>
+    <button class="btn" id="regBtn" type="submit">Continue</button>
+  </form>
+</section>
+
+<!-- PAGE 2: OTP -->
+<section id="page-otp" class="wrap hidden">
+  <form class="card" id="otpForm">
+    <h1>Verify your number</h1>
+    <p class="sub" id="otpSub">Enter the code we sent.</p>
+    <label for="code">6-digit code</label>
+    <div class="otp-row">
+      <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" required>
+    </div>
+    <p class="err" id="otpErr" role="alert"></p>
+    <button class="btn" id="otpBtn" type="submit">Verify &amp; continue</button>
+    <button class="btn btn-ghost" id="backBtn" type="button">Back</button>
+    <p class="resend">Didn't get it? <button type="button" id="resendBtn">Resend code</button></p>
+  </form>
+</section>
+
+<!-- PAGE 3: Matching -->
+<section id="page-match" class="hidden">
+  <header>
+    <h2>Dandiya Night — Matches 🪔</h2>
+    <button class="link" id="logoutBtn">Sign out</button>
+  </header>
+  <main class="match">
+    <div class="filters">
+      <div class="f"><label for="ageMin">Age from</label><input id="ageMin" type="number" min="18" max="100" value="18" style="width:80px"></div>
+      <div class="f"><label for="ageMax">Age to</label><input id="ageMax" type="number" min="18" max="100" value="100" style="width:80px"></div>
+      <div class="f"><label for="genderFilter">Looking for</label>
+        <select id="genderFilter">
+          <option value="any">Anyone</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <button class="btn" id="applyFilters" style="margin:0;width:auto;padding:9px 18px">Apply</button>
+    </div>
+    <div class="grid" id="profileGrid"></div>
+  </main>
+</section>
+
+<script>
+const $=id=>document.getElementById(id);
+let pendingPhone=null;
+
+function show(page){
+  ["page-register","page-otp","page-match"].forEach(id=>$(id).classList.toggle("hidden", id!==page));
+}
+
+/* ---- photo: resize client-side before upload ---- */
+function fileToResizedDataUrl(file, max=480){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("read failed"));
+    reader.onload=()=>{
+      img.onload=()=>{
+        const scale=Math.min(1, max/Math.max(img.width,img.height));
+        const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+        const canvas=document.createElement("canvas");
+        canvas.width=w; canvas.height=h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL("image/jpeg",0.82));
+      };
+      img.onerror=()=>reject(new Error("decode failed"));
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+let photoDataUrl=null;
+$("photo").addEventListener("change", async e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  photoDataUrl=await fileToResizedDataUrl(file);
+  $("photoPreview").src=photoDataUrl;
+});
+
+/* ---- page 1: register ---- */
+$("registerForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const err=$("regErr"); err.textContent="";
+  if(!photoDataUrl){ err.textContent="Please choose a photo."; return; }
+  const btn=$("regBtn"); btn.disabled=true;
+  try{
+    const res=await fetch("/api/register",{
+      method:"POST", headers:{"Content-Type":"application/json"}, credentials:"same-origin",
+      body:JSON.stringify({
+        name:$("name").value.trim(),
+        age:Number($("age").value),
+        gender:$("gender").value,
+        phone:$("phone").value.trim(),
+        photoDataUrl
+      })
+    });
+    const data=await res.json();
+    if(!res.ok){ err.textContent=data.error||"Something went wrong"; btn.disabled=false; return; }
+    pendingPhone=data.phone;
+    $("otpSub").textContent="Code sent to "+pendingPhone;
+    show("page-otp");
+  }catch(_){ err.textContent="Network error. Try again."; }
+  btn.disabled=false;
+});
+
+/* ---- page 2: otp ---- */
+$("otpForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const err=$("otpErr"); err.textContent="";
+  const btn=$("otpBtn"); btn.disabled=true;
+  try{
+    const res=await fetch("/api/verify-otp",{
+      method:"POST", headers:{"Content-Type":"application/json"}, credentials:"same-origin",
+      body:JSON.stringify({ phone:pendingPhone, code:$("code").value.trim() })
+    });
+    const data=await res.json();
+    if(!res.ok){ err.textContent=data.error||"Invalid code"; btn.disabled=false; return; }
+    show("page-match");
+    loadProfiles();
+  }catch(_){ err.textContent="Network error. Try again."; }
+  btn.disabled=false;
+});
+$("backBtn").addEventListener("click", ()=>show("page-register"));
+$("resendBtn").addEventListener("click", async ()=>{
+  $("otpErr").textContent="";
+  try{
+    const res=await fetch("/api/resend-otp",{
+      method:"POST", headers:{"Content-Type":"application/json"}, credentials:"same-origin",
+      body:JSON.stringify({ phone:pendingPhone })
+    });
+    const data=await res.json();
+    $("otpErr").textContent = res.ok ? "Code resent." : (data.error||"Could not resend");
+  }catch(_){ $("otpErr").textContent="Network error."; }
+});
+
+/* ---- page 3: matches ---- */
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+async function loadProfiles(){
+  const ageMin=$("ageMin").value||18, ageMax=$("ageMax").value||100, gender=$("genderFilter").value;
+  const grid=$("profileGrid");
+  grid.innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const res=await fetch(`/api/profiles?ageMin=${ageMin}&ageMax=${ageMax}&gender=${gender}`,{credentials:"same-origin"});
+    if(res.status===401){ show("page-register"); return; }
+    const list=await res.json();
+    grid.innerHTML = list.length ? list.map(p=>`
+      <div class="pcard">
+        <img src="${esc(p.photoUrl)}" alt="${esc(p.name)}">
+        <div class="pinfo"><b>${esc(p.name)}</b><small>${p.age} · ${esc(p.gender)}</small></div>
+      </div>`).join("") : '<div class="empty">No matches yet for these filters — check back soon!</div>';
+  }catch(_){ grid.innerHTML='<div class="empty">Could not load matches. Pull to refresh.</div>'; }
+}
+$("applyFilters").addEventListener("click", loadProfiles);
+$("logoutBtn").addEventListener("click", async ()=>{
+  try{ await fetch("/api/logout",{method:"POST",credentials:"same-origin"}); }catch(_){}
+  show("page-register");
+});
+
+/* if already verified (cookie still valid), skip straight to matches */
+fetch("/api/me",{credentials:"same-origin"}).then(r=>r.json()).then(d=>{
+  if(d.signedIn){ show("page-match"); loadProfiles(); }
+});
+</script>
+</body>
+</html>
