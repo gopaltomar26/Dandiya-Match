@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Device Panel</title>
+<style>
+:root{--bg:#e9eee9;--panel:#fff;--ink:#17262b;--mute:#5d6e72;--line:#d3dcd6;--on:#17855a;--on-bg:#e2f4ea;--off:#b5432b;--off-bg:#fbe7e1;--accent:#17262b}
+@media (prefers-color-scheme:dark){:root{--bg:#10191c;--panel:#182327;--ink:#e7efec;--mute:#93a5a8;--line:#2a393d;--on:#4cc58e;--on-bg:#173528;--off:#f08a73;--off-bg:#3b211b;--accent:#e7efec}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif}
+button,input{font:inherit}
+.hidden{display:none!important}
+/* login */
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.login form{background:var(--panel);border:1px solid var(--line);padding:32px;width:100%;max-width:380px;border-radius:6px}
+.login h1{margin:0 0 4px;font-size:26px;letter-spacing:-.02em}
+.login p{margin:0 0 22px;color:var(--mute)}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input{width:100%;padding:10px 12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px}
+input:focus-visible,button:focus-visible{outline:2px solid var(--on);outline-offset:2px}
+.btn{margin-top:22px;width:100%;padding:11px;border:0;border-radius:4px;background:var(--accent);color:var(--panel);font-weight:600;cursor:pointer}
+.err{color:var(--off);min-height:22px;margin:10px 0 0}
+.hint{margin-top:14px;font-size:13px;color:var(--mute)}
+/* app */
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{margin:0;font-size:20px;letter-spacing:-.01em}
+header span{color:var(--mute);margin-right:14px}
+.link{background:none;border:1px solid var(--line);color:var(--ink);padding:6px 12px;border-radius:4px;cursor:pointer}
+main{max-width:980px;margin:0 auto;padding:24px}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+.count{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--line);padding:14px 16px;border-radius:4px}
+.count b{display:block;font-size:34px;line-height:1.1}
+.count.on{border-left-color:var(--on)}.count.off{border-left-color:var(--off)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.tools input{flex:1;min-width:200px}
+.tabs{display:flex;gap:6px}
+.tab{padding:9px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;cursor:pointer}
+.tab[aria-pressed=true]{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+.list{background:var(--panel);border:1px solid var(--line);border-radius:4px}
+.row{display:grid;grid-template-columns:1.6fr 1fr 1fr 110px;gap:12px;align-items:center;padding:13px 16px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row small{display:block;color:var(--mute)}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:3px 12px 3px 9px;border-radius:99px;font-weight:600;font-size:13px;justify-self:start}
+.pill::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
+.pill.on{color:var(--on);background:var(--on-bg)}
+.pill.off{color:var(--off);background:var(--off-bg)}
+.empty{padding:28px 16px;color:var(--mute);text-align:center}
+.foot{margin-top:12px;color:var(--mute);font-size:13px}
+@media (max-width:640px){.row{grid-template-columns:1fr auto}.row .c3,.row .c2{display:none}.counts{grid-template-columns:1fr 1fr 1fr}.count b{font-size:26px}}
+</style>
+</head>
+<body>
+
+<section id="login" class="login">
+  <form id="loginForm" autocomplete="off">
+    <h1>Device Panel</h1>
+    <p>Sign in to see which devices are online.</p>
+    <label for="u">Username</label>
+    <input id="u" required>
+    <label for="p">Password</label>
+    <input id="p" type="password" required>
+    <p class="err" id="err" role="alert"></p>
+    <button class="btn" type="submit">Sign in</button>
+    <p class="hint">Demo login: <b>admin</b> / <b>admin123</b></p>
+  </form>
+</section>
+
+<section id="app" class="hidden">
+  <header>
+    <h1>Device Panel</h1>
+    <div><span id="who"></span><button class="link" id="logout">Sign out</button></div>
+  </header>
+  <main>
+    <div class="counts">
+      <div class="count"><small>All devices</small><b id="nAll">0</b></div>
+      <div class="count on"><small>Online</small><b id="nOn">0</b></div>
+      <div class="count off"><small>Offline</small><b id="nOff">0</b></div>
+    </div>
+    <div class="tools">
+      <div class="tabs" id="tabs">
+        <button class="tab" data-f="all" aria-pressed="true">All</button>
+        <button class="tab" data-f="online" aria-pressed="false">Online</button>
+        <button class="tab" data-f="offline" aria-pressed="false">Offline</button>
+      </div>
+      <input id="q" type="search" placeholder="Search by name or location" aria-label="Search devices">
+    </div>
+    <div class="list" id="list"></div>
+    <p class="foot" id="foot"></p>
+  </main>
+</section>
+
+<script>
+/* ---------- CONFIG ---------- */
+// Demo login only. For a real site, check credentials on a server (see notes).
+const USERS = { admin: "admin123" };
+
+// Replace this function with a real call, e.g.:
+//   const res = await fetch("/api/devices"); return res.json();
+// Each device: { id, name, location, online: true/false, lastSeen: timestamp(ms) }
+let devices = [
+  ["Front Door Camera","Entrance"],["Warehouse Sensor A","Warehouse"],["Warehouse Sensor B","Warehouse"],
+  ["Office Router","Office"],["Lobby Display","Lobby"],["Server Room Monitor","Server room"],
+  ["Parking Gate","Parking"],["Reception Printer","Reception"]
+].map((d,i)=>({id:"DEV-"+(101+i),name:d[0],location:d[1],online:i%3!==2,lastSeen:Date.now()-(i%3===2?(i+1)*600000:0)}));
+
+async function loadDevices(){
+  // Demo: randomly flip a device now and then to mimic real status changes.
+  if(Math.random()<0.6){
+    const d=devices[Math.floor(Math.random()*devices.length)];
+    d.online=!d.online;
+  }
+  const now=Date.now();
+  devices.forEach(d=>{ if(d.online) d.lastSeen=now; });
+  return devices;
+}
+
+/* ---------- STATE ---------- */
+let filter="all", query="", current=[];
+const $=id=>document.getElementById(id);
+
+function session(){ try{return sessionStorage.getItem("dp_user")}catch(e){return null} }
+function setSession(v){ try{ v?sessionStorage.setItem("dp_user",v):sessionStorage.removeItem("dp_user") }catch(e){} }
+
+function ago(t){
+  const s=Math.round((Date.now()-t)/1000);
+  if(s<10) return "just now";
+  if(s<60) return s+" sec ago";
+  if(s<3600) return Math.round(s/60)+" min ago";
+  if(s<86400) return Math.round(s/3600)+" hr ago";
+  return Math.round(s/86400)+" days ago";
+}
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function render(){
+  const on=current.filter(d=>d.online).length;
+  $("nAll").textContent=current.length; $("nOn").textContent=on; $("nOff").textContent=current.length-on;
+  const q=query.trim().toLowerCase();
+  const shown=current.filter(d=>
+    (filter==="all"||(filter==="online")===d.online) &&
+    (!q||d.name.toLowerCase().includes(q)||d.location.toLowerCase().includes(q)));
+  $("list").innerHTML=shown.length?shown.map(d=>`
+    <div class="row">
+      <div><b>${esc(d.name)}</b><small>${esc(d.id)}</small></div>
+      <div class="c2">${esc(d.location)}</div>
+      <div class="c3">${d.online?"Active now":"Last seen "+ago(d.lastSeen)}</div>
+      <span class="pill ${d.online?"on":"off"}">${d.online?"Online":"Offline"}</span>
+    </div>`).join(""):'<div class="empty">No devices match. Clear the search or switch the filter.</div>';
+  $("foot").textContent="Updated "+new Date().toLocaleTimeString()+" · refreshes every 5 seconds";
+}
+
+async function refresh(){ current=await loadDevices(); render(); }
+
+let timer=null;
+function showApp(user){
+  $("login").classList.add("hidden"); $("app").classList.remove("hidden");
+  $("who").textContent="Signed in as "+user;
+  refresh(); clearInterval(timer); timer=setInterval(refresh,5000);
+}
+function showLogin(){
+  clearInterval(timer);
+  $("app").classList.add("hidden"); $("login").classList.remove("hidden");
+  $("loginForm").reset(); $("err").textContent="";
+}
+
+$("loginForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const u=$("u").value.trim(), p=$("p").value;
+  if(USERS[u]!==undefined && USERS[u]===p){ setSession(u); showApp(u); }
+  else $("err").textContent="Wrong username or password. Check both and try again.";
+});
+$("logout").addEventListener("click",()=>{ setSession(null); showLogin(); });
+$("tabs").addEventListener("click",e=>{
+  const b=e.target.closest(".tab"); if(!b) return;
+  filter=b.dataset.f;
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-pressed",t===b));
+  render();
+});
+$("q").addEventListener("input",e=>{ query=e.target.value; render(); });
+
+const u=session(); if(u) showApp(u);
+</script>
+</body>
+</html>
